@@ -98,7 +98,7 @@ const MOCK = {
 
 const tabs = ["Overview", "Revenue Recovered", "Revenue Protected", "Cost Savings", "Payer Breakdown", "CPT Analysis"];
 
-function MetricCard({ label, value, sub, color }) {
+function MetricCard({ label, value, sub = undefined, color = undefined }: { label: any; value: any; sub?: any; color?: any }) {
   return (
     <div style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", padding: "1rem", flex: 1, minWidth: 0 }}>
       <div style={{ fontSize: 12, color: "var(--color-text-secondary)", marginBottom: 4 }}>{label}</div>
