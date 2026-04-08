@@ -1,20 +1,52 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 
-const COLORS = {
-  blue: "#378ADD", blueLight: "#E6F1FB",
-  teal: "#1D9E75", tealLight: "#E1F5EE",
-  amber: "#BA7517", amberLight: "#FAEEDA",
-  red: "#E24B4A", redLight: "#FCEBEB",
-  green: "#639922", greenLight: "#EAF3DE",
-  purple: "#7F77DD", purpleLight: "#EEEDFE",
-  gray: "#888780", grayLight: "#F1EFE8",
-  coral: "#D85A30", coralLight: "#FAECE7",
+// ─── Design tokens ────────────────────────────────────────────────────────────
+const C = {
+  blue:     "#3B82F6",
+  blueA:    "rgba(59,130,246,0.14)",
+  emerald:  "#10B981",
+  emeraldA: "rgba(16,185,129,0.14)",
+  amber:    "#F59E0B",
+  amberA:   "rgba(245,158,11,0.14)",
+  red:      "#EF4444",
+  redA:     "rgba(239,68,68,0.14)",
+  purple:   "#8B5CF6",
+  purpleA:  "rgba(139,92,246,0.14)",
+  orange:   "#F97316",
+  orangeA:  "rgba(249,115,22,0.14)",
+  // surfaces
+  base:     "#0A0B0D",
+  surface:  "#13151A",
+  panel:    "#0F1117",
+  border:   "#1E2128",
+  // text
+  text:     "#E2E8F0",
+  muted:    "#64748B",
+  dim:      "#334155",
 };
 
-const fmt = (n) => "$" + Math.round(n).toLocaleString();
-const fmtK = (n) => n >= 1000000 ? "$" + (n/1000000).toFixed(2) + "M" : "$" + Math.round(n/1000).toLocaleString() + "K";
-const pct = (n) => Math.round(n * 10) / 10 + "%";
+// Legacy alias map for inline references
+const COLORS = {
+  blue: C.blue,       blueLight: C.blueA,
+  teal: C.emerald,    tealLight: C.emeraldA,
+  amber: C.amber,     amberLight: C.amberA,
+  red: C.red,         redLight: C.redA,
+  green: C.emerald,   greenLight: C.emeraldA,
+  purple: C.purple,   purpleLight: C.purpleA,
+  gray: C.muted,      grayLight: "rgba(100,116,139,0.14)",
+  coral: C.orange,    coralLight: C.orangeA,
+};
 
+const MONO: React.CSSProperties = { fontFamily: "'JetBrains Mono', monospace" };
+
+// ─── Formatters ───────────────────────────────────────────────────────────────
+const fmt  = (n) => "$" + Math.round(n).toLocaleString();
+const fmtK = (n) => n >= 1000000
+  ? "$" + (n / 1000000).toFixed(2) + "M"
+  : "$" + Math.round(n / 1000).toLocaleString() + "K";
+const pct  = (n) => Math.round(n * 10) / 10 + "%";
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
 const PAYERS = ["BCBS", "Molina MCO", "UHC Community", "Medicare", "Aetna", "Cigna"];
 const CPTS = [
   { code: "81455", desc: "Solid tumor panel 51+ genes" },
@@ -35,33 +67,33 @@ const MOCK = {
     savings: 620400,
     roiRatio: 11.2,
     accessions: 4820,
-    period: "Last 6 months"
+    period: "Last 6 months",
   },
   trend: [
-    { month: "Nov", recovered: 148000, protected: 122000, savings: 89000 },
-    { month: "Dec", recovered: 175000, protected: 138000, savings: 95000 },
-    { month: "Jan", recovered: 198000, protected: 155000, savings: 100000 },
-    { month: "Feb", recovered: 210000, protected: 168000, savings: 105000 },
-    { month: "Mar", recovered: 245000, protected: 195000, savings: 115000 },
-    { month: "Apr", recovered: 264500, protected: 208400, savings: 116400 },
+    { month: "NOV", recovered: 148000, protected: 122000, savings: 89000 },
+    { month: "DEC", recovered: 175000, protected: 138000, savings: 95000 },
+    { month: "JAN", recovered: 198000, protected: 155000, savings: 100000 },
+    { month: "FEB", recovered: 210000, protected: 168000, savings: 105000 },
+    { month: "MAR", recovered: 245000, protected: 195000, savings: 115000 },
+    { month: "APR", recovered: 264500, protected: 208400, savings: 116400 },
   ],
   payers: [
-    { name: "BCBS", group: "Commercial", accessions: 1420, revenue: 986000, denialBefore: 18.2, denialAfter: 4.1, appealSuccess: 74, avgPaid: 2840, contracted: 3100, roi: 892000 },
-    { name: "Molina MCO", group: "Medicaid MCO", accessions: 820, revenue: 412000, denialBefore: 22.5, denialAfter: 5.8, appealSuccess: 61, avgPaid: 1680, contracted: 1900, roi: 398000 },
-    { name: "UHC Community", group: "Medicaid MCO", accessions: 640, revenue: 318000, denialBefore: 20.1, denialAfter: 4.9, appealSuccess: 65, avgPaid: 1720, contracted: 1950, roi: 312000 },
-    { name: "Medicare", group: "Government", accessions: 980, revenue: 524000, denialBefore: 12.4, denialAfter: 2.8, appealSuccess: 70, avgPaid: 2240, contracted: 2380, roi: 428000 },
-    { name: "Aetna", group: "Commercial", accessions: 560, revenue: 368000, denialBefore: 15.8, denialAfter: 3.5, appealSuccess: 72, avgPaid: 2610, contracted: 2800, roi: 482000 },
-    { name: "Cigna", group: "Commercial", accessions: 400, revenue: 248000, denialBefore: 14.2, denialAfter: 3.1, appealSuccess: 69, avgPaid: 2480, contracted: 2650, roi: 335300 },
+    { name: "BCBS",          group: "Commercial",  accessions: 1420, revenue: 986000,  denialBefore: 18.2, denialAfter: 4.1, appealSuccess: 74, avgPaid: 2840, contracted: 3100, roi: 892000  },
+    { name: "Molina MCO",    group: "Medicaid MCO", accessions: 820,  revenue: 412000,  denialBefore: 22.5, denialAfter: 5.8, appealSuccess: 61, avgPaid: 1680, contracted: 1900, roi: 398000  },
+    { name: "UHC Community", group: "Medicaid MCO", accessions: 640,  revenue: 318000,  denialBefore: 20.1, denialAfter: 4.9, appealSuccess: 65, avgPaid: 1720, contracted: 1950, roi: 312000  },
+    { name: "Medicare",      group: "Government",  accessions: 980,  revenue: 524000,  denialBefore: 12.4, denialAfter: 2.8, appealSuccess: 70, avgPaid: 2240, contracted: 2380, roi: 428000  },
+    { name: "Aetna",         group: "Commercial",  accessions: 560,  revenue: 368000,  denialBefore: 15.8, denialAfter: 3.5, appealSuccess: 72, avgPaid: 2610, contracted: 2800, roi: 482000  },
+    { name: "Cigna",         group: "Commercial",  accessions: 400,  revenue: 248000,  denialBefore: 14.2, denialAfter: 3.1, appealSuccess: 69, avgPaid: 2480, contracted: 2650, roi: 335300  },
   ],
   cpts: [
-    { code: "81455", accessions: 1640, contracted: 3200, paid: 2840, denialRate: 8.2, appealSuccess: 72, totalROI: 984000 },
-    { code: "81445", accessions: 820, contracted: 2100, paid: 1920, denialRate: 7.4, appealSuccess: 68, totalROI: 412000 },
-    { code: "81162", accessions: 540, contracted: 2800, paid: 2510, denialRate: 9.1, appealSuccess: 65, totalROI: 318000 },
-    { code: "81479", accessions: 680, contracted: 1800, paid: 1240, denialRate: 32.4, appealSuccess: 48, totalROI: 224000 },
-    { code: "81275", accessions: 420, contracted: 820, paid: 780, denialRate: 5.2, appealSuccess: 74, totalROI: 98000 },
-    { code: "81235", accessions: 380, contracted: 840, paid: 800, denialRate: 4.8, appealSuccess: 76, totalROI: 88000 },
-    { code: "81257", accessions: 240, contracted: 800, paid: 760, denialRate: 5.6, appealSuccess: 71, totalROI: 62000 },
-    { code: "81401", accessions: 100, contracted: 620, paid: 540, denialRate: 12.8, appealSuccess: 55, totalROI: 48000 },
+    { code: "81455", accessions: 1640, contracted: 3200, paid: 2840, denialRate: 8.2,  appealSuccess: 72, totalROI: 984000 },
+    { code: "81445", accessions: 820,  contracted: 2100, paid: 1920, denialRate: 7.4,  appealSuccess: 68, totalROI: 412000 },
+    { code: "81162", accessions: 540,  contracted: 2800, paid: 2510, denialRate: 9.1,  appealSuccess: 65, totalROI: 318000 },
+    { code: "81479", accessions: 680,  contracted: 1800, paid: 1240, denialRate: 32.4, appealSuccess: 48, totalROI: 224000 },
+    { code: "81275", accessions: 420,  contracted: 820,  paid: 780,  denialRate: 5.2,  appealSuccess: 74, totalROI: 98000  },
+    { code: "81235", accessions: 380,  contracted: 840,  paid: 800,  denialRate: 4.8,  appealSuccess: 76, totalROI: 88000  },
+    { code: "81257", accessions: 240,  contracted: 800,  paid: 760,  denialRate: 5.6,  appealSuccess: 71, totalROI: 62000  },
+    { code: "81401", accessions: 100,  contracted: 620,  paid: 540,  denialRate: 12.8, appealSuccess: 55, totalROI: 48000  },
   ],
   recovered: {
     appealsSubmitted: 892,
@@ -87,42 +119,105 @@ const MOCK = {
     reworkEliminated: 68400,
     fteEquivalent: 1.8,
     tasks: [
-      { task: "Claim submission", hours: 720, rate: 30, monthly: 21600 },
+      { task: "Claim submission",   hours: 720, rate: 30, monthly: 21600 },
       { task: "Prior auth requests", hours: 680, rate: 33, monthly: 22440 },
-      { task: "Denial appeals", hours: 560, rate: 35, monthly: 19600 },
-      { task: "Auth appeals", hours: 480, rate: 35, monthly: 16800 },
-      { task: "Payer follow-up", hours: 400, rate: 28, monthly: 11200 },
-    ]
-  }
+      { task: "Denial appeals",     hours: 560, rate: 35, monthly: 19600 },
+      { task: "Auth appeals",       hours: 480, rate: 35, monthly: 16800 },
+      { task: "Payer follow-up",    hours: 400, rate: 28, monthly: 11200 },
+    ],
+  },
 };
 
 const tabs = ["Overview", "Revenue Recovered", "Revenue Protected", "Cost Savings", "Payer Breakdown", "CPT Analysis"];
 
-function MetricCard({ label, value, sub = undefined, color = undefined }: { label: any; value: any; sub?: any; color?: any }) {
+// ─── Shared style helpers ─────────────────────────────────────────────────────
+const card: React.CSSProperties = {
+  background: C.surface,
+  border: `1px solid ${C.border}`,
+  borderRadius: 2,
+  padding: "14px 16px",
+};
+
+const sectionHeader: React.CSSProperties = {
+  fontSize: 10,
+  fontWeight: 600,
+  letterSpacing: "0.1em",
+  textTransform: "uppercase" as const,
+  color: C.muted,
+  marginBottom: 14,
+};
+
+const thStyle: React.CSSProperties = {
+  textAlign: "left",
+  padding: "5px 10px",
+  fontSize: 9,
+  fontWeight: 600,
+  letterSpacing: "0.1em",
+  textTransform: "uppercase" as const,
+  color: C.muted,
+  whiteSpace: "nowrap",
+  borderBottom: `1px solid ${C.border}`,
+};
+
+const tdStyle: React.CSSProperties = {
+  padding: "7px 10px",
+  fontSize: 12,
+  borderBottom: `1px solid ${C.border}`,
+};
+
+const monoTd: React.CSSProperties = { ...tdStyle, ...MONO };
+
+const trackStyle: React.CSSProperties = {
+  height: 4,
+  background: C.border,
+  borderRadius: 0,
+  overflow: "hidden",
+};
+
+// ─── Primitives ───────────────────────────────────────────────────────────────
+function MetricCard({ label, value, sub = undefined, color = undefined }: {
+  label: any; value: any; sub?: any; color?: any;
+}) {
   return (
-    <div style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", padding: "1rem", flex: 1, minWidth: 0 }}>
-      <div style={{ fontSize: 12, color: "var(--color-text-secondary)", marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 500, color: color || "var(--color-text-primary)" }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: "var(--color-text-secondary)", marginTop: 2 }}>{sub}</div>}
+    <div style={{
+      background: C.surface,
+      borderTop: `1px solid ${C.border}`,
+      borderRight: `1px solid ${C.border}`,
+      borderBottom: `1px solid ${C.border}`,
+      borderLeft: `3px solid ${color || C.dim}`,
+      borderRadius: 2,
+      padding: "12px 14px",
+      flex: 1,
+      minWidth: 0,
+    }}>
+      <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: C.muted, marginBottom: 6 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 20, fontWeight: 500, color: color || C.text, ...MONO, lineHeight: 1 }}>
+        {value}
+      </div>
+      {sub && (
+        <div style={{ fontSize: 10, color: C.muted, marginTop: 5, letterSpacing: "0.02em" }}>{sub}</div>
+      )}
     </div>
   );
 }
 
-function SimpleBarChart({ data, keyA, keyB, keyC, height = 200 }) {
+function StackedBar({ data, keyA, keyB, keyC, height = 180 }) {
   const max = Math.max(...data.map(d => (d[keyA] || 0) + (d[keyB] || 0) + (d[keyC] || 0)));
   return (
-    <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height, paddingBottom: 20, position: "relative" }}>
+    <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height, paddingBottom: 22, position: "relative" }}>
       {data.map((d, i) => {
         const total = (d[keyA] || 0) + (d[keyB] || 0) + (d[keyC] || 0);
-        const h = (total / max) * (height - 30);
+        const h = (total / max) * (height - 28);
         return (
-          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
-            <div style={{ width: "100%", display: "flex", flexDirection: "column", height: h }}>
-              {keyC && <div style={{ flex: d[keyC] / total, background: COLORS.amber, borderRadius: "2px 2px 0 0" }} />}
-              {keyB && <div style={{ flex: d[keyB] / total, background: COLORS.teal }} />}
-              {keyA && <div style={{ flex: d[keyA] / total, background: COLORS.blue, borderRadius: keyC ? 0 : "2px 2px 0 0" }} />}
+          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ width: "100%", display: "flex", flexDirection: "column", height: h, borderRadius: 0 }}>
+              {keyC && <div style={{ flex: d[keyC] / total, background: C.amber }} />}
+              {keyB && <div style={{ flex: d[keyB] / total, background: C.emerald }} />}
+              {keyA && <div style={{ flex: d[keyA] / total, background: C.blue }} />}
             </div>
-            <div style={{ fontSize: 10, color: "var(--color-text-secondary)", marginTop: 4 }}>{d.month || d.name?.split(" ")[0]}</div>
+            <div style={{ fontSize: 9, color: C.muted, marginTop: 5, letterSpacing: "0.06em", ...MONO }}>{d.month || d.name?.split(" ")[0]}</div>
           </div>
         );
       })}
@@ -130,136 +225,186 @@ function SimpleBarChart({ data, keyA, keyB, keyC, height = 200 }) {
   );
 }
 
-function DenialBadge({ rate }) {
-  const color = rate > 10 ? COLORS.red : rate > 5 ? COLORS.amber : COLORS.green;
-  const bg = rate > 10 ? COLORS.redLight : rate > 5 ? COLORS.amberLight : COLORS.greenLight;
-  return <span style={{ background: bg, color, fontSize: 11, padding: "2px 8px", borderRadius: 4, fontWeight: 500 }}>{pct(rate)}</span>;
+function MiniBar({ val, max, color }: { val: number; max: number; color: string }) {
+  return (
+    <div style={{ ...trackStyle, flex: 1 }}>
+      <div style={{ height: 4, width: (val / max * 100) + "%", background: color, borderRadius: 0 }} />
+    </div>
+  );
 }
 
+function DenialBadge({ rate }) {
+  const color = rate > 10 ? C.red : rate > 5 ? C.amber : C.emerald;
+  const bg    = rate > 10 ? C.redA : rate > 5 ? C.amberA : C.emeraldA;
+  return (
+    <span style={{ background: bg, color, fontSize: 10, padding: "2px 7px", borderRadius: 2, fontWeight: 600, ...MONO, letterSpacing: "0.03em" }}>
+      {pct(rate)}
+    </span>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const color = status === "Corrected" ? C.emerald : status === "Flagged" ? C.red : C.amber;
+  const bg    = status === "Corrected" ? C.emeraldA : status === "Flagged" ? C.redA : C.amberA;
+  return (
+    <span style={{ background: bg, color, fontSize: 10, padding: "2px 7px", borderRadius: 2, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" as const }}>
+      {status}
+    </span>
+  );
+}
+
+function GroupBadge({ group }: { group: string }) {
+  const color = group === "Commercial" ? C.blue : group === "Government" ? C.emerald : C.amber;
+  const bg    = group === "Commercial" ? C.blueA : group === "Government" ? C.emeraldA : C.amberA;
+  return (
+    <span style={{ background: bg, color, fontSize: 9, padding: "2px 7px", borderRadius: 2, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+      {group}
+    </span>
+  );
+}
+
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div style={{ ...card }}>
+      <div style={sectionHeader}>{title}</div>
+      {children}
+    </div>
+  );
+}
+
+// ─── Overview tab ─────────────────────────────────────────────────────────────
 function OverviewTab() {
   const s = MOCK.summary;
   const t = MOCK.trend;
   const total = s.recovered + s.protected + s.savings;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <MetricCard label="Total ROI" value={fmtK(s.totalROI)} sub="Last 6 months" color={COLORS.teal} />
-        <MetricCard label="Revenue Recovered" value={fmtK(s.recovered)} sub="Via appeals & underpayments" color={COLORS.blue} />
-        <MetricCard label="Revenue Protected" value={fmtK(s.protected)} sub="Denials prevented upfront" color={COLORS.purple} />
-        <MetricCard label="Cost Savings" value={fmtK(s.savings)} sub="Labor & rework eliminated" color={COLORS.amber} />
-        <MetricCard label="ROI Ratio" value={s.roiRatio + "x"} sub="Per $1 spent on automation" color={COLORS.coral} />
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <MetricCard label="Total ROI"          value={fmtK(s.totalROI)}   sub="Last 6 months"                color={C.emerald} />
+        <MetricCard label="Revenue Recovered"  value={fmtK(s.recovered)}  sub="Appeals & underpayments"      color={C.blue}    />
+        <MetricCard label="Revenue Protected"  value={fmtK(s.protected)}  sub="Denials prevented upfront"    color={C.purple}  />
+        <MetricCard label="Cost Savings"       value={fmtK(s.savings)}    sub="Labor & rework eliminated"    color={C.amber}   />
+        <MetricCard label="ROI Ratio"          value={s.roiRatio + "x"}   sub="Per $1 spent on automation"   color={C.orange}  />
       </div>
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-        <div style={{ flex: 2, minWidth: 260, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem 1.25rem" }}>
-          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>Monthly ROI trend</div>
-          <div style={{ display: "flex", gap: 12, marginBottom: 8, fontSize: 11, color: "var(--color-text-secondary)" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: COLORS.blue, display: "inline-block" }} />Recovered</span>
-            <span style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: COLORS.teal, display: "inline-block" }} />Protected</span>
-            <span style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: COLORS.amber, display: "inline-block" }} />Savings</span>
+
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <SectionCard title="Monthly ROI Trend">
+          <div style={{ display: "flex", gap: 16, marginBottom: 10, fontSize: 10 }}>
+            {[["Recovered", C.blue], ["Protected", C.emerald], ["Savings", C.amber]].map(([lbl, clr]) => (
+              <span key={lbl as string} style={{ display: "flex", alignItems: "center", gap: 5, color: C.muted, letterSpacing: "0.05em" }}>
+                <span style={{ width: 8, height: 8, background: clr as string, display: "inline-block", flexShrink: 0 }} />
+                {lbl}
+              </span>
+            ))}
           </div>
-          <SimpleBarChart data={t} keyA="recovered" keyB="protected" keyC="savings" height={180} />
-        </div>
-        <div style={{ flex: 1, minWidth: 200, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem 1.25rem" }}>
-          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>ROI split</div>
+          <StackedBar data={t} keyA="recovered" keyB="protected" keyC="savings" height={170} />
+        </SectionCard>
+
+        <div style={{ ...card, minWidth: 200, flex: 1 }}>
+          <div style={sectionHeader}>ROI Split</div>
           {[
-            { label: "Revenue Recovered", val: s.recovered, color: COLORS.blue },
-            { label: "Revenue Protected", val: s.protected, color: COLORS.purple },
-            { label: "Cost Savings", val: s.savings, color: COLORS.amber },
+            { label: "Revenue Recovered", val: s.recovered, color: C.blue },
+            { label: "Revenue Protected", val: s.protected, color: C.purple },
+            { label: "Cost Savings",      val: s.savings,   color: C.amber },
           ].map(r => (
-            <div key={r.label} style={{ marginBottom: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
-                <span style={{ color: "var(--color-text-secondary)" }}>{r.label}</span>
-                <span style={{ fontWeight: 500 }}>{Math.round(r.val / total * 100)}%</span>
+            <div key={r.label} style={{ marginBottom: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 5 }}>
+                <span style={{ color: C.muted }}>{r.label}</span>
+                <span style={{ ...MONO, fontWeight: 600, color: C.text }}>{Math.round(r.val / total * 100)}%</span>
               </div>
-              <div style={{ height: 6, background: "var(--color-background-secondary)", borderRadius: 3 }}>
-                <div style={{ height: 6, width: (r.val / total * 100) + "%", background: r.color, borderRadius: 3 }} />
+              <div style={{ ...trackStyle, height: 5 }}>
+                <div style={{ height: 5, width: (r.val / total * 100) + "%", background: r.color }} />
               </div>
             </div>
           ))}
-          <div style={{ marginTop: 16, fontSize: 12, color: "var(--color-text-secondary)" }}>Total accessions processed</div>
-          <div style={{ fontSize: 20, fontWeight: 500 }}>{s.accessions.toLocaleString()}</div>
+          <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: C.muted, marginBottom: 4 }}>Accessions Processed</div>
+            <div style={{ fontSize: 22, fontWeight: 600, color: C.text, ...MONO }}>{s.accessions.toLocaleString()}</div>
+          </div>
         </div>
       </div>
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem 1.25rem" }}>
-        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>Top wins by payer</div>
+
+      <SectionCard title="Top Wins by Payer">
         <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-              {["Payer", "Accessions", "Denial rate before", "Denial rate after", "Appeal success", "Total ROI"].map(h => (
-                <th key={h} style={{ textAlign: "left", padding: "4px 8px", color: "var(--color-text-secondary)", fontWeight: 400 }}>{h}</th>
+            <tr>
+              {["Payer", "Accessions", "Denial Before", "Denial After", "Appeal Success", "Total ROI"].map(h => (
+                <th key={h} style={thStyle}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {MOCK.payers.sort((a,b) => b.roi - a.roi).map((p, i) => (
-              <tr key={p.name} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                <td style={{ padding: "6px 8px", fontWeight: 500 }}>{p.name}</td>
-                <td style={{ padding: "6px 8px" }}>{p.accessions.toLocaleString()}</td>
-                <td style={{ padding: "6px 8px" }}><DenialBadge rate={p.denialBefore} /></td>
-                <td style={{ padding: "6px 8px" }}><DenialBadge rate={p.denialAfter} /></td>
-                <td style={{ padding: "6px 8px" }}>{pct(p.appealSuccess)}</td>
-                <td style={{ padding: "6px 8px", fontWeight: 500, color: COLORS.teal }}>{fmtK(p.roi)}</td>
+            {MOCK.payers.sort((a, b) => b.roi - a.roi).map((p, i) => (
+              <tr key={p.name} style={{ background: i % 2 === 1 ? "rgba(255,255,255,0.025)" : "transparent" }}>
+                <td style={{ ...tdStyle, fontWeight: 600, color: C.text }}>{p.name}</td>
+                <td style={{ ...monoTd, color: C.muted }}>{p.accessions.toLocaleString()}</td>
+                <td style={tdStyle}><DenialBadge rate={p.denialBefore} /></td>
+                <td style={tdStyle}><DenialBadge rate={p.denialAfter} /></td>
+                <td style={{ ...monoTd, color: C.muted }}>{pct(p.appealSuccess)}</td>
+                <td style={{ ...monoTd, fontWeight: 600, color: C.emerald }}>{fmtK(p.roi)}</td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
+      </SectionCard>
     </div>
   );
 }
 
+// ─── Revenue Recovered tab ────────────────────────────────────────────────────
 function RecoveredTab() {
   const r = MOCK.recovered;
   const bars = [
-    { label: "Appeals won", val: r.appealsWon, color: COLORS.teal },
-    { label: "Pending", val: r.appealsPending, color: COLORS.amber },
-    { label: "Lost", val: r.appealsLost, color: COLORS.red },
+    { label: "Appeals won",  val: r.appealsWon,      color: C.emerald },
+    { label: "Pending",      val: r.appealsPending,  color: C.amber   },
+    { label: "Lost",         val: r.appealsLost,     color: C.red     },
   ];
-  const maxBar = r.appealsWon;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <MetricCard label="Total recovered" value={fmtK(MOCK.summary.recovered)} color={COLORS.blue} />
-        <MetricCard label="Appeals submitted" value={r.appealsSubmitted.toLocaleString()} />
-        <MetricCard label="Appeal success rate" value={pct(r.appealSuccessRate)} color={COLORS.teal} />
-        <MetricCard label="Avg recovery / appeal" value={fmt(r.avgRecoveryPerAppeal)} />
-        <MetricCard label="Underpayment recovered" value={fmtK(r.underpaymentRecovered)} color={COLORS.purple} />
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <MetricCard label="Total Recovered"       value={fmtK(MOCK.summary.recovered)}   color={C.blue}    />
+        <MetricCard label="Appeals Submitted"     value={r.appealsSubmitted.toLocaleString()}                />
+        <MetricCard label="Appeal Success Rate"   value={pct(r.appealSuccessRate)}        color={C.emerald} />
+        <MetricCard label="Avg Recovery / Appeal" value={fmt(r.avgRecoveryPerAppeal)}                       />
+        <MetricCard label="Underpayment Recovered" value={fmtK(r.underpaymentRecovered)} color={C.purple}  />
       </div>
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-        <div style={{ flex: 1, minWidth: 220, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem 1.25rem" }}>
-          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 16 }}>Appeal outcomes</div>
+
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ ...card, flex: 1, minWidth: 200 }}>
+          <div style={sectionHeader}>Appeal Outcomes</div>
           {bars.map(b => (
-            <div key={b.label} style={{ marginBottom: 14 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
-                <span style={{ color: "var(--color-text-secondary)" }}>{b.label}</span>
-                <span style={{ fontWeight: 500 }}>{b.val}</span>
+            <div key={b.label} style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 6 }}>
+                <span style={{ color: C.muted, letterSpacing: "0.03em" }}>{b.label}</span>
+                <span style={{ ...MONO, fontWeight: 600, color: b.color }}>{b.val}</span>
               </div>
-              <div style={{ height: 8, background: "var(--color-background-secondary)", borderRadius: 4 }}>
-                <div style={{ height: 8, width: (b.val / r.appealsSubmitted * 100) + "%", background: b.color, borderRadius: 4 }} />
+              <div style={{ ...trackStyle, height: 6 }}>
+                <div style={{ height: 6, width: (b.val / r.appealsSubmitted * 100) + "%", background: b.color }} />
               </div>
             </div>
           ))}
         </div>
-        <div style={{ flex: 2, minWidth: 280, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem 1.25rem" }}>
-          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>Underpayment by payer</div>
+
+        <div style={{ ...card, flex: 2, minWidth: 280 }}>
+          <div style={sectionHeader}>Underpayment by Payer</div>
           <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                {["Payer", "Contracted rate", "Avg paid", "Gap / claim", "Est. total underpaid"].map(h => (
-                  <th key={h} style={{ textAlign: "left", padding: "4px 6px", color: "var(--color-text-secondary)", fontWeight: 400 }}>{h}</th>
+              <tr>
+                {["Payer", "Contracted Rate", "Avg Paid", "Gap / Claim", "Est. Total Underpaid"].map(h => (
+                  <th key={h} style={thStyle}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {MOCK.payers.map(p => {
+              {MOCK.payers.map((p, i) => {
                 const gap = p.contracted - p.avgPaid;
                 return (
-                  <tr key={p.name} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                    <td style={{ padding: "6px 6px", fontWeight: 500 }}>{p.name}</td>
-                    <td style={{ padding: "6px 6px" }}>{fmt(p.contracted)}</td>
-                    <td style={{ padding: "6px 6px" }}>{fmt(p.avgPaid)}</td>
-                    <td style={{ padding: "6px 6px", color: gap > 200 ? COLORS.red : COLORS.amber }}>{fmt(gap)}</td>
-                    <td style={{ padding: "6px 6px", fontWeight: 500 }}>{fmtK(gap * p.accessions * 0.3)}</td>
+                  <tr key={p.name} style={{ background: i % 2 === 1 ? "rgba(255,255,255,0.025)" : "transparent" }}>
+                    <td style={{ ...tdStyle, fontWeight: 600, color: C.text }}>{p.name}</td>
+                    <td style={{ ...monoTd, color: C.muted }}>{fmt(p.contracted)}</td>
+                    <td style={{ ...monoTd, color: C.muted }}>{fmt(p.avgPaid)}</td>
+                    <td style={{ ...monoTd, color: gap > 200 ? C.red : C.amber, fontWeight: 600 }}>{fmt(gap)}</td>
+                    <td style={{ ...monoTd, fontWeight: 600, color: C.text }}>{fmtK(gap * p.accessions * 0.3)}</td>
                   </tr>
                 );
               })}
@@ -267,94 +412,100 @@ function RecoveredTab() {
           </table>
         </div>
       </div>
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem 1.25rem" }}>
-        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>Recovery breakdown by source</div>
+
+      <SectionCard title="Recovery Breakdown by Source">
         {[
-          { label: "Auto-appeal wins", val: r.appealsWon * r.avgRecoveryPerAppeal * 0.6, color: COLORS.blue },
-          { label: "Underpayment corrections", val: r.underpaymentRecovered, color: COLORS.purple },
-          { label: "Prior auth appeal recovery", val: r.authAppealRecovered, color: COLORS.teal },
+          { label: "Auto-appeal wins",           val: r.appealsWon * r.avgRecoveryPerAppeal * 0.6, color: C.blue    },
+          { label: "Underpayment corrections",   val: r.underpaymentRecovered,                      color: C.purple  },
+          { label: "Prior auth appeal recovery", val: r.authAppealRecovered,                         color: C.emerald },
         ].map(item => (
-          <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-            <div style={{ width: 120, fontSize: 12, color: "var(--color-text-secondary)", flexShrink: 0 }}>{item.label}</div>
-            <div style={{ flex: 1, height: 8, background: "var(--color-background-secondary)", borderRadius: 4 }}>
-              <div style={{ height: 8, width: (item.val / MOCK.summary.recovered * 100) + "%", background: item.color, borderRadius: 4 }} />
-            </div>
-            <div style={{ fontSize: 12, fontWeight: 500, minWidth: 60, textAlign: "right" }}>{fmtK(item.val)}</div>
+          <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <div style={{ width: 160, fontSize: 11, color: C.muted, flexShrink: 0, letterSpacing: "0.02em" }}>{item.label}</div>
+            <MiniBar val={item.val} max={MOCK.summary.recovered} color={item.color} />
+            <div style={{ ...MONO, fontSize: 12, fontWeight: 600, minWidth: 64, textAlign: "right", color: C.text }}>{fmtK(item.val)}</div>
           </div>
         ))}
-      </div>
+      </SectionCard>
     </div>
   );
 }
 
+// ─── Revenue Protected tab ────────────────────────────────────────────────────
 function ProtectedTab() {
   const p = MOCK.protected;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <MetricCard label="Total protected" value={fmtK(p.totalProtected)} color={COLORS.purple} />
-        <MetricCard label="Auth denial rate before" value={pct(p.authDenialsBefore)} sub="Pre-automation baseline" />
-        <MetricCard label="Auth denial rate after" value={pct(p.authDenialsAfter)} color={COLORS.teal} sub="Post-automation" />
-        <MetricCard label="Clean claim rate" value={pct(p.cleanClaimAfter)} sub={`Up from ${pct(p.cleanClaimBefore)}`} color={COLORS.teal} />
-        <MetricCard label="Timely filing saves" value={fmtK(p.timelyFilingSaved)} color={COLORS.blue} />
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <MetricCard label="Total Protected"        value={fmtK(p.totalProtected)}        color={C.purple}  />
+        <MetricCard label="Auth Denial Before"     value={pct(p.authDenialsBefore)}      sub="Pre-automation baseline"                />
+        <MetricCard label="Auth Denial After"      value={pct(p.authDenialsAfter)}       sub="Post-automation"         color={C.emerald} />
+        <MetricCard label="Clean Claim Rate"       value={pct(p.cleanClaimAfter)}        sub={`Up from ${pct(p.cleanClaimBefore)}`} color={C.emerald} />
+        <MetricCard label="Timely Filing Saves"    value={fmtK(p.timelyFilingSaved)}     color={C.blue}    />
       </div>
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-        <div style={{ flex: 1, minWidth: 200, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem 1.25rem" }}>
-          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 16 }}>Auth denial rate: before vs. after</div>
+
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ ...card, flex: 1, minWidth: 200 }}>
+          <div style={sectionHeader}>Auth Denial Rate — Before vs. After</div>
           {[
-            { label: "Before automation", val: p.authDenialsBefore, color: COLORS.red },
-            { label: "After automation", val: p.authDenialsAfter, color: COLORS.teal },
+            { label: "Before automation", val: p.authDenialsBefore, color: C.red     },
+            { label: "After automation",  val: p.authDenialsAfter,  color: C.emerald },
           ].map(item => (
             <div key={item.label} style={{ marginBottom: 16 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
-                <span style={{ color: "var(--color-text-secondary)" }}>{item.label}</span>
-                <span style={{ fontWeight: 500, color: item.color }}>{pct(item.val)}</span>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 6 }}>
+                <span style={{ color: C.muted }}>{item.label}</span>
+                <span style={{ ...MONO, fontWeight: 600, color: item.color }}>{pct(item.val)}</span>
               </div>
-              <div style={{ height: 12, background: "var(--color-background-secondary)", borderRadius: 6 }}>
-                <div style={{ height: 12, width: (item.val / p.authDenialsBefore * 100) + "%", background: item.color, borderRadius: 6 }} />
+              <div style={{ ...trackStyle, height: 8 }}>
+                <div style={{ height: 8, width: (item.val / p.authDenialsBefore * 100) + "%", background: item.color }} />
               </div>
             </div>
           ))}
-          <div style={{ marginTop: 8, padding: 10, background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", fontSize: 12 }}>
-            <span style={{ color: "var(--color-text-secondary)" }}>Improvement: </span>
-            <span style={{ fontWeight: 500, color: COLORS.teal }}>-{Math.round((p.authDenialsBefore - p.authDenialsAfter) / p.authDenialsBefore * 100)}% reduction</span>
+          <div style={{ marginTop: 10, padding: "8px 10px", background: C.emeraldA, borderLeft: `3px solid ${C.emerald}`, borderRadius: 2, fontSize: 11 }}>
+            <span style={{ color: C.muted }}>Reduction: </span>
+            <span style={{ ...MONO, fontWeight: 600, color: C.emerald }}>
+              -{Math.round((p.authDenialsBefore - p.authDenialsAfter) / p.authDenialsBefore * 100)}%
+            </span>
           </div>
         </div>
-        <div style={{ flex: 1, minWidth: 200, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem 1.25rem" }}>
-          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 16 }}>Clean claim rate improvement</div>
+
+        <div style={{ ...card, flex: 1, minWidth: 200 }}>
+          <div style={sectionHeader}>Clean Claim Rate Improvement</div>
           {[
-            { label: "Before automation", val: p.cleanClaimBefore, color: COLORS.amber },
-            { label: "After automation", val: p.cleanClaimAfter, color: COLORS.teal },
+            { label: "Before automation", val: p.cleanClaimBefore, color: C.amber   },
+            { label: "After automation",  val: p.cleanClaimAfter,  color: C.emerald },
           ].map(item => (
             <div key={item.label} style={{ marginBottom: 16 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
-                <span style={{ color: "var(--color-text-secondary)" }}>{item.label}</span>
-                <span style={{ fontWeight: 500, color: item.color }}>{pct(item.val)}</span>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 6 }}>
+                <span style={{ color: C.muted }}>{item.label}</span>
+                <span style={{ ...MONO, fontWeight: 600, color: item.color }}>{pct(item.val)}</span>
               </div>
-              <div style={{ height: 12, background: "var(--color-background-secondary)", borderRadius: 6 }}>
-                <div style={{ height: 12, width: item.val + "%", background: item.color, borderRadius: 6 }} />
+              <div style={{ ...trackStyle, height: 8 }}>
+                <div style={{ height: 8, width: item.val + "%", background: item.color }} />
               </div>
             </div>
           ))}
-          <div style={{ marginTop: 8, padding: 10, background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", fontSize: 12 }}>
-            <span style={{ color: "var(--color-text-secondary)" }}>Delta: </span>
-            <span style={{ fontWeight: 500, color: COLORS.teal }}>+{Math.round(p.cleanClaimAfter - p.cleanClaimBefore)}pp improvement</span>
+          <div style={{ marginTop: 10, padding: "8px 10px", background: C.emeraldA, borderLeft: `3px solid ${C.emerald}`, borderRadius: 2, fontSize: 11 }}>
+            <span style={{ color: C.muted }}>Delta: </span>
+            <span style={{ ...MONO, fontWeight: 600, color: C.emerald }}>
+              +{Math.round(p.cleanClaimAfter - p.cleanClaimBefore)}pp
+            </span>
           </div>
         </div>
-        <div style={{ flex: 1, minWidth: 200, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem 1.25rem" }}>
-          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 16 }}>Revenue protected by source</div>
+
+        <div style={{ ...card, flex: 1, minWidth: 200 }}>
+          <div style={sectionHeader}>Revenue Protected by Source</div>
           {[
-            { label: "Auth denial prevention", val: 621000, color: COLORS.purple },
-            { label: "Clean claim improvement", val: 222600, color: COLORS.blue },
-            { label: "Timely filing protection", val: p.timelyFilingSaved, color: COLORS.teal },
+            { label: "Auth denial prevention",    val: 621000,              color: C.purple  },
+            { label: "Clean claim improvement",   val: 222600,              color: C.blue    },
+            { label: "Timely filing protection",  val: p.timelyFilingSaved, color: C.emerald },
           ].map(item => (
-            <div key={item.label} style={{ marginBottom: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
-                <span style={{ color: "var(--color-text-secondary)" }}>{item.label}</span>
-                <span style={{ fontWeight: 500 }}>{fmtK(item.val)}</span>
+            <div key={item.label} style={{ marginBottom: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 5 }}>
+                <span style={{ color: C.muted }}>{item.label}</span>
+                <span style={{ ...MONO, fontWeight: 600, color: C.text }}>{fmtK(item.val)}</span>
               </div>
-              <div style={{ height: 6, background: "var(--color-background-secondary)", borderRadius: 3 }}>
-                <div style={{ height: 6, width: (item.val / p.totalProtected * 100) + "%", background: item.color, borderRadius: 3 }} />
+              <div style={{ ...trackStyle, height: 5 }}>
+                <div style={{ height: 5, width: (item.val / p.totalProtected * 100) + "%", background: item.color }} />
               </div>
             </div>
           ))}
@@ -364,230 +515,268 @@ function ProtectedTab() {
   );
 }
 
+// ─── Cost Savings tab ─────────────────────────────────────────────────────────
 function SavingsTab() {
   const s = MOCK.savings;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <MetricCard label="Total labor saved" value={fmtK(s.totalLaborSaved)} color={COLORS.amber} />
-        <MetricCard label="Total hours saved" value={s.totalHoursSaved.toLocaleString()} sub="Last 6 months" />
-        <MetricCard label="FTE equivalent" value={s.fteEquivalent + " FTE"} sub="Hours saved / 160 hrs/mo" color={COLORS.coral} />
-        <MetricCard label="Rework eliminated" value={fmtK(s.reworkEliminated)} color={COLORS.teal} />
-        <MetricCard label="Total cost savings" value={fmtK(MOCK.summary.savings)} color={COLORS.green} />
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <MetricCard label="Total Labor Saved"   value={fmtK(s.totalLaborSaved)}          color={C.amber}   />
+        <MetricCard label="Total Hours Saved"   value={s.totalHoursSaved.toLocaleString()} sub="Last 6 months"               />
+        <MetricCard label="FTE Equivalent"      value={s.fteEquivalent + " FTE"}          sub="Hours / 160 hrs/mo" color={C.orange} />
+        <MetricCard label="Rework Eliminated"   value={fmtK(s.reworkEliminated)}          color={C.emerald} />
+        <MetricCard label="Total Cost Savings"  value={fmtK(MOCK.summary.savings)}        color={C.blue}    />
       </div>
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem 1.25rem" }}>
-        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>Hours saved by task type</div>
+
+      <SectionCard title="Hours Saved by Task Type">
         {s.tasks.map(t => (
-          <div key={t.task} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-            <div style={{ width: 140, fontSize: 12, color: "var(--color-text-secondary)", flexShrink: 0 }}>{t.task}</div>
-            <div style={{ flex: 1, height: 10, background: "var(--color-background-secondary)", borderRadius: 5 }}>
-              <div style={{ height: 10, width: (t.hours / 720 * 100) + "%", background: COLORS.amber, borderRadius: 5 }} />
-            </div>
-            <div style={{ fontSize: 12, fontWeight: 500, minWidth: 50, textAlign: "right" }}>{t.hours}h</div>
-            <div style={{ fontSize: 12, color: COLORS.teal, minWidth: 60, textAlign: "right" }}>{fmt(t.monthly)}/mo</div>
+          <div key={t.task} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <div style={{ width: 150, fontSize: 11, color: C.muted, flexShrink: 0 }}>{t.task}</div>
+            <MiniBar val={t.hours} max={720} color={C.amber} />
+            <div style={{ ...MONO, fontSize: 12, fontWeight: 600, minWidth: 48, textAlign: "right", color: C.text }}>{t.hours}h</div>
+            <div style={{ ...MONO, fontSize: 11, color: C.emerald, minWidth: 72, textAlign: "right" }}>{fmt(t.monthly)}/mo</div>
           </div>
         ))}
-      </div>
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem 1.25rem" }}>
-        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>Labor cost savings by role</div>
+      </SectionCard>
+
+      <SectionCard title="Labor Cost Savings by Role">
         <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-              {["Task automated", "Hours saved / mo", "Hourly rate", "Monthly savings", "6-month total"].map(h => (
-                <th key={h} style={{ textAlign: "left", padding: "4px 8px", color: "var(--color-text-secondary)", fontWeight: 400 }}>{h}</th>
+            <tr>
+              {["Task Automated", "Hours Saved / Mo", "Hourly Rate", "Monthly Savings", "6-Month Total"].map(h => (
+                <th key={h} style={thStyle}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {s.tasks.map(t => (
-              <tr key={t.task} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                <td style={{ padding: "6px 8px", fontWeight: 500 }}>{t.task}</td>
-                <td style={{ padding: "6px 8px" }}>{Math.round(t.hours / 6)}h</td>
-                <td style={{ padding: "6px 8px" }}>${t.rate}/hr</td>
-                <td style={{ padding: "6px 8px", color: COLORS.teal, fontWeight: 500 }}>{fmt(t.monthly)}</td>
-                <td style={{ padding: "6px 8px", fontWeight: 500 }}>{fmtK(t.monthly * 6)}</td>
+            {s.tasks.map((t, i) => (
+              <tr key={t.task} style={{ background: i % 2 === 1 ? "rgba(255,255,255,0.025)" : "transparent" }}>
+                <td style={{ ...tdStyle, fontWeight: 500, color: C.text }}>{t.task}</td>
+                <td style={{ ...monoTd, color: C.muted }}>{Math.round(t.hours / 6)}h</td>
+                <td style={{ ...monoTd, color: C.muted }}>${t.rate}/hr</td>
+                <td style={{ ...monoTd, color: C.emerald, fontWeight: 600 }}>{fmt(t.monthly)}</td>
+                <td style={{ ...monoTd, fontWeight: 600, color: C.text }}>{fmtK(t.monthly * 6)}</td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
+      </SectionCard>
     </div>
   );
 }
 
+// ─── Payer Breakdown tab ──────────────────────────────────────────────────────
 function PayerTab() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <MetricCard label="Payers tracked" value="6" />
-        <MetricCard label="Best performing" value="BCBS" sub="$892K ROI" color={COLORS.teal} />
-        <MetricCard label="Highest denial rate (before)" value="Molina MCO" sub="22.5% → 5.8%" color={COLORS.amber} />
-        <MetricCard label="Biggest underpayment gap" value="Molina MCO" sub="$220 avg gap/claim" color={COLORS.red} />
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <MetricCard label="Payers Tracked"           value="6"           />
+        <MetricCard label="Best Performing"          value="BCBS"        sub="$892K ROI"             color={C.emerald} />
+        <MetricCard label="Highest Denial (Before)"  value="Molina MCO"  sub="22.5% → 5.8%"         color={C.amber}   />
+        <MetricCard label="Biggest Underpayment Gap" value="Molina MCO"  sub="$220 avg gap/claim"    color={C.red}     />
       </div>
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem 1.25rem" }}>
-        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>Payer performance table</div>
+
+      <SectionCard title="Payer Performance Table">
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse", minWidth: 640 }}>
+          <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse", minWidth: 700 }}>
             <thead>
-              <tr style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                {["Payer", "Group", "Accessions", "Revenue", "Denial before", "Denial after", "Appeal success", "Avg paid", "Contracted", "ROI"].map(h => (
-                  <th key={h} style={{ textAlign: "left", padding: "4px 8px", color: "var(--color-text-secondary)", fontWeight: 400, whiteSpace: "nowrap" }}>{h}</th>
+              <tr>
+                {["Payer", "Group", "Accessions", "Revenue", "Denial Before", "Denial After", "Appeal Success", "Avg Paid", "Contracted", "ROI"].map(h => (
+                  <th key={h} style={thStyle}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {MOCK.payers.map(p => (
-                <tr key={p.name} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                  <td style={{ padding: "7px 8px", fontWeight: 500 }}>{p.name}</td>
-                  <td style={{ padding: "7px 8px" }}><span style={{ fontSize: 10, background: p.group === "Commercial" ? COLORS.blueLight : p.group === "Government" ? COLORS.tealLight : COLORS.amberLight, color: p.group === "Commercial" ? COLORS.blue : p.group === "Government" ? COLORS.teal : COLORS.amber, padding: "2px 6px", borderRadius: 4 }}>{p.group}</span></td>
-                  <td style={{ padding: "7px 8px" }}>{p.accessions.toLocaleString()}</td>
-                  <td style={{ padding: "7px 8px" }}>{fmtK(p.revenue)}</td>
-                  <td style={{ padding: "7px 8px" }}><DenialBadge rate={p.denialBefore} /></td>
-                  <td style={{ padding: "7px 8px" }}><DenialBadge rate={p.denialAfter} /></td>
-                  <td style={{ padding: "7px 8px" }}>{pct(p.appealSuccess)}</td>
-                  <td style={{ padding: "7px 8px" }}>{fmt(p.avgPaid)}</td>
-                  <td style={{ padding: "7px 8px" }}>{fmt(p.contracted)}</td>
-                  <td style={{ padding: "7px 8px", fontWeight: 500, color: COLORS.teal }}>{fmtK(p.roi)}</td>
+              {MOCK.payers.map((p, i) => (
+                <tr key={p.name} style={{ background: i % 2 === 1 ? "rgba(255,255,255,0.025)" : "transparent" }}>
+                  <td style={{ ...tdStyle, fontWeight: 600, color: C.text }}>{p.name}</td>
+                  <td style={tdStyle}><GroupBadge group={p.group} /></td>
+                  <td style={{ ...monoTd, color: C.muted }}>{p.accessions.toLocaleString()}</td>
+                  <td style={{ ...monoTd, color: C.muted }}>{fmtK(p.revenue)}</td>
+                  <td style={tdStyle}><DenialBadge rate={p.denialBefore} /></td>
+                  <td style={tdStyle}><DenialBadge rate={p.denialAfter} /></td>
+                  <td style={{ ...monoTd, color: C.muted }}>{pct(p.appealSuccess)}</td>
+                  <td style={{ ...monoTd, color: C.muted }}>{fmt(p.avgPaid)}</td>
+                  <td style={{ ...monoTd, color: C.muted }}>{fmt(p.contracted)}</td>
+                  <td style={{ ...monoTd, fontWeight: 600, color: C.emerald }}>{fmtK(p.roi)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem 1.25rem" }}>
-        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>Denial rate reduction by payer</div>
+      </SectionCard>
+
+      <SectionCard title="Denial Rate Reduction by Payer">
         {MOCK.payers.map(p => (
-          <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-            <div style={{ width: 110, fontSize: 12, color: "var(--color-text-secondary)", flexShrink: 0 }}>{p.name}</div>
-            <div style={{ flex: 1, position: "relative", height: 10 }}>
-              <div style={{ height: 10, background: COLORS.redLight, borderRadius: 5, width: (p.denialBefore / 25 * 100) + "%" }} />
-              <div style={{ height: 10, background: COLORS.teal, borderRadius: 5, width: (p.denialAfter / 25 * 100) + "%", position: "absolute", top: 0 }} />
+          <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <div style={{ width: 110, fontSize: 11, color: C.muted, flexShrink: 0 }}>{p.name}</div>
+            <div style={{ flex: 1, position: "relative", height: 8 }}>
+              <div style={{ position: "absolute", top: 0, left: 0, height: 8, width: (p.denialBefore / 25 * 100) + "%", background: C.redA, border: `1px solid ${C.red}` }} />
+              <div style={{ position: "absolute", top: 0, left: 0, height: 8, width: (p.denialAfter / 25 * 100) + "%", background: C.emerald }} />
             </div>
-            <div style={{ fontSize: 11, minWidth: 90, textAlign: "right", color: "var(--color-text-secondary)" }}>
-              <span style={{ color: COLORS.red }}>{pct(p.denialBefore)}</span> → <span style={{ color: COLORS.teal }}>{pct(p.denialAfter)}</span>
+            <div style={{ ...MONO, fontSize: 11, minWidth: 100, textAlign: "right" }}>
+              <span style={{ color: C.red }}>{pct(p.denialBefore)}</span>
+              <span style={{ color: C.muted }}> → </span>
+              <span style={{ color: C.emerald }}>{pct(p.denialAfter)}</span>
             </div>
           </div>
         ))}
-      </div>
+      </SectionCard>
     </div>
   );
 }
 
+// ─── CPT Analysis tab ─────────────────────────────────────────────────────────
 function CPTTab() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <MetricCard label="CPT codes tracked" value="8" />
-        <MetricCard label="Highest denial rate" value="81479" sub="Unlisted — 32.4%" color={COLORS.red} />
-        <MetricCard label="Best appeal success" value="81235 (EGFR)" sub="76% appeal win rate" color={COLORS.teal} />
-        <MetricCard label="Stacking risk flagged" value="3 claim groups" sub="KRAS + EGFR + NRAS" color={COLORS.amber} />
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <MetricCard label="CPT Codes Tracked"    value="8"                                             />
+        <MetricCard label="Highest Denial Rate"  value="81479"             sub="Unlisted — 32.4%" color={C.red}     />
+        <MetricCard label="Best Appeal Success"  value="81235 (EGFR)"      sub="76% win rate"     color={C.emerald} />
+        <MetricCard label="Stacking Risk Flagged" value="3 claim groups"   sub="KRAS+EGFR+NRAS"   color={C.amber}   />
       </div>
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem 1.25rem" }}>
-        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>CPT code performance</div>
+
+      <SectionCard title="CPT Code Performance">
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                {["CPT", "Description", "Accessions", "Contracted", "Avg paid", "Gap/claim", "Denial rate", "Appeal success", "ROI"].map(h => (
-                  <th key={h} style={{ textAlign: "left", padding: "4px 8px", color: "var(--color-text-secondary)", fontWeight: 400, whiteSpace: "nowrap" }}>{h}</th>
+              <tr>
+                {["CPT", "Description", "Accessions", "Contracted", "Avg Paid", "Gap/Claim", "Denial Rate", "Appeal Success", "ROI"].map(h => (
+                  <th key={h} style={thStyle}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {MOCK.cpts.map(c => {
+              {MOCK.cpts.map((c, i) => {
                 const desc = CPTS.find(x => x.code === c.code)?.desc || "";
-                const gap = c.contracted - c.paid;
+                const gap  = c.contracted - c.paid;
                 return (
-                  <tr key={c.code} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                    <td style={{ padding: "7px 8px", fontWeight: 500, fontFamily: "monospace" }}>{c.code}</td>
-                    <td style={{ padding: "7px 8px", color: "var(--color-text-secondary)", maxWidth: 160 }}>{desc}</td>
-                    <td style={{ padding: "7px 8px" }}>{c.accessions.toLocaleString()}</td>
-                    <td style={{ padding: "7px 8px" }}>{fmt(c.contracted)}</td>
-                    <td style={{ padding: "7px 8px" }}>{fmt(c.paid)}</td>
-                    <td style={{ padding: "7px 8px", color: gap > 300 ? COLORS.red : COLORS.amber }}>{fmt(gap)}</td>
-                    <td style={{ padding: "7px 8px" }}><DenialBadge rate={c.denialRate} /></td>
-                    <td style={{ padding: "7px 8px" }}>{pct(c.appealSuccess)}</td>
-                    <td style={{ padding: "7px 8px", fontWeight: 500, color: COLORS.teal }}>{fmtK(c.totalROI)}</td>
+                  <tr key={c.code} style={{ background: i % 2 === 1 ? "rgba(255,255,255,0.025)" : "transparent" }}>
+                    <td style={{ ...monoTd, fontWeight: 600, color: C.blue }}>{c.code}</td>
+                    <td style={{ ...tdStyle, color: C.muted, maxWidth: 160 }}>{desc}</td>
+                    <td style={{ ...monoTd, color: C.muted }}>{c.accessions.toLocaleString()}</td>
+                    <td style={{ ...monoTd, color: C.muted }}>{fmt(c.contracted)}</td>
+                    <td style={{ ...monoTd, color: C.muted }}>{fmt(c.paid)}</td>
+                    <td style={{ ...monoTd, fontWeight: 600, color: gap > 300 ? C.red : C.amber }}>{fmt(gap)}</td>
+                    <td style={tdStyle}><DenialBadge rate={c.denialRate} /></td>
+                    <td style={{ ...monoTd, color: C.muted }}>{pct(c.appealSuccess)}</td>
+                    <td style={{ ...monoTd, fontWeight: 600, color: C.emerald }}>{fmtK(c.totalROI)}</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
-      </div>
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem 1.25rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.amber }} />
-          <div style={{ fontSize: 13, fontWeight: 500 }}>Code stacking risk flags</div>
-        </div>
+      </SectionCard>
+
+      <SectionCard title="Code Stacking Risk Flags">
         <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-              {["Claim group", "Codes billed", "Should have been", "Bundling risk ($)", "Status"].map(h => (
-                <th key={h} style={{ textAlign: "left", padding: "4px 8px", color: "var(--color-text-secondary)", fontWeight: 400 }}>{h}</th>
+            <tr>
+              {["Claim Group", "Codes Billed", "Should Have Been", "Bundling Risk", "Status"].map(h => (
+                <th key={h} style={thStyle}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {[
-              { group: "KRAS + EGFR + NRAS stack", codes: "81275 + 81235 + 81257", should: "81445 (panel)", risk: 48200, status: "Under review" },
-              { group: "EGFR + 81479 combo", codes: "81235 + 81479", should: "81455 (large panel)", risk: 31600, status: "Flagged" },
-              { group: "Multi-gene individual stack", codes: "81401 × 4", should: "81445 (panel)", risk: 22400, status: "Corrected" },
-            ].map(row => (
-              <tr key={row.group} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                <td style={{ padding: "7px 8px", fontWeight: 500 }}>{row.group}</td>
-                <td style={{ padding: "7px 8px", fontFamily: "monospace", fontSize: 11 }}>{row.codes}</td>
-                <td style={{ padding: "7px 8px", color: COLORS.teal }}>{row.should}</td>
-                <td style={{ padding: "7px 8px", color: COLORS.red, fontWeight: 500 }}>{fmt(row.risk)}</td>
-                <td style={{ padding: "7px 8px" }}>
-                  <span style={{ fontSize: 10, background: row.status === "Corrected" ? COLORS.tealLight : row.status === "Flagged" ? COLORS.redLight : COLORS.amberLight, color: row.status === "Corrected" ? COLORS.teal : row.status === "Flagged" ? COLORS.red : COLORS.amber, padding: "2px 8px", borderRadius: 4 }}>{row.status}</span>
-                </td>
+              { group: "KRAS + EGFR + NRAS stack",   codes: "81275 + 81235 + 81257", should: "81445 (panel)",       risk: 48200, status: "Under review" },
+              { group: "EGFR + 81479 combo",          codes: "81235 + 81479",          should: "81455 (large panel)", risk: 31600, status: "Flagged"      },
+              { group: "Multi-gene individual stack", codes: "81401 × 4",              should: "81445 (panel)",       risk: 22400, status: "Corrected"    },
+            ].map((row, i) => (
+              <tr key={row.group} style={{ background: i % 2 === 1 ? "rgba(255,255,255,0.025)" : "transparent" }}>
+                <td style={{ ...tdStyle, fontWeight: 600, color: C.text }}>{row.group}</td>
+                <td style={{ ...monoTd, fontSize: 11, color: C.muted }}>{row.codes}</td>
+                <td style={{ ...monoTd, color: C.blue }}>{row.should}</td>
+                <td style={{ ...monoTd, fontWeight: 600, color: C.red }}>{fmt(row.risk)}</td>
+                <td style={tdStyle}><StatusBadge status={row.status} /></td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
+      </SectionCard>
     </div>
   );
 }
 
+// ─── Root ─────────────────────────────────────────────────────────────────────
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState(0);
-  const [dateRange, setDateRange] = useState("6mo");
+  const [activeTab, setActiveTab]   = useState(0);
+  const [dateRange, setDateRange]   = useState("6mo");
 
   const tabContent = [<OverviewTab />, <RecoveredTab />, <ProtectedTab />, <SavingsTab />, <PayerTab />, <CPTTab />];
 
   return (
-    <div style={{ fontFamily: "var(--font-sans)", color: "var(--color-text-primary)", padding: "1rem 0" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+    <div style={{ fontFamily: "var(--font-sans)", color: C.text, paddingTop: "1.5rem" }}>
+
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 500 }}>ClaimsIQ ROI Dashboard</div>
-          <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>GenomicLab Provider — Mock Data</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 3, height: 20, background: C.blue, flexShrink: 0 }} />
+            <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: "0.04em", color: C.text }}>
+              CLAIMSIQ ROI DASHBOARD
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: C.muted, marginTop: 4, paddingLeft: 13, letterSpacing: "0.05em" }}>
+            GenomicLab Provider — Mock Data
+          </div>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <select value={dateRange} onChange={e => setDateRange(e.target.value)} style={{ fontSize: 12 }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <select value={dateRange} onChange={e => setDateRange(e.target.value)}>
             <option value="30d">Last 30 days</option>
             <option value="90d">Last 90 days</option>
             <option value="6mo">Last 6 months</option>
             <option value="12mo">Last 12 months</option>
           </select>
-          <span style={{ fontSize: 10, color: "var(--color-text-secondary)", background: "var(--color-background-secondary)", padding: "3px 8px", borderRadius: 4 }}>● Mock data</span>
+          <span style={{
+            fontSize: 9, letterSpacing: "0.1em", fontWeight: 600,
+            background: C.amberA, color: C.amber,
+            border: `1px solid ${C.amber}`,
+            padding: "3px 8px", borderRadius: 2,
+          }}>
+            MOCK DATA
+          </span>
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 0, borderBottom: "0.5px solid var(--color-border-tertiary)", marginBottom: 20, overflowX: "auto" }}>
+      {/* Tab bar */}
+      <div style={{ display: "flex", borderBottom: `1px solid ${C.border}`, marginBottom: 20, overflowX: "auto" }}>
         {tabs.map((t, i) => (
-          <button key={t} onClick={() => setActiveTab(i)} style={{ padding: "8px 14px", fontSize: 12, background: "none", border: "none", borderBottom: activeTab === i ? "2px solid var(--color-text-primary)" : "2px solid transparent", color: activeTab === i ? "var(--color-text-primary)" : "var(--color-text-secondary)", cursor: "pointer", whiteSpace: "nowrap", fontWeight: activeTab === i ? 500 : 400 }}>
-            {t}
+          <button key={t} onClick={() => setActiveTab(i)} style={{
+            padding: "8px 16px",
+            fontSize: 11,
+            fontWeight: 500,
+            letterSpacing: "0.06em",
+            fontFamily: "var(--font-sans)",
+            background: "none",
+            border: "none",
+            borderBottom: activeTab === i ? `2px solid ${C.blue}` : "2px solid transparent",
+            color: activeTab === i ? C.blue : C.muted,
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+            marginBottom: -1,
+            transition: "color 0.15s",
+          }}>
+            {t.toUpperCase()}
           </button>
         ))}
       </div>
 
+      {/* Tab content */}
       {tabContent[activeTab]}
 
-      <div style={{ marginTop: 24, fontSize: 11, color: "var(--color-text-secondary)", borderTop: "0.5px solid var(--color-border-tertiary)", paddingTop: 12, display: "flex", justifyContent: "space-between" }}>
-        <span>Data source: Mock — ready for live integration</span>
-        <span>Last refresh: April 7, 2026</span>
+      {/* Footer */}
+      <div style={{
+        marginTop: 24, fontSize: 10, color: C.dim,
+        borderTop: `1px solid ${C.border}`, paddingTop: 12,
+        display: "flex", justifyContent: "space-between",
+        letterSpacing: "0.06em",
+        ...MONO,
+      }}>
+        <span>DATA SOURCE: MOCK — READY FOR LIVE INTEGRATION</span>
+        <span>LAST REFRESH: 2026-04-07 00:00 UTC</span>
       </div>
     </div>
   );

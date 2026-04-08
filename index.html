@@ -3,25 +3,54 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pulse RCM</title>
+    <title>Pulse RCM — ClaimsIQ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        --color-text-primary: #1a1a1a;
-        --color-text-secondary: #6b6b6b;
-        --color-background-primary: #ffffff;
-        --color-background-secondary: #f5f5f5;
-        --color-border-tertiary: #e0e0e0;
-        --border-radius-md: 8px;
-        --border-radius-lg: 12px;
+        --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+        --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+        --color-text-primary: #E2E8F0;
+        --color-text-secondary: #64748B;
+        --color-background-primary: #0F1117;
+        --color-background-secondary: #13151A;
+        --color-border-tertiary: #1E2128;
+        --border-radius-md: 2px;
+        --border-radius-lg: 2px;
       }
-      body {
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body {
         margin: 0;
-        background: var(--color-background-primary);
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 1rem;
+        padding: 0;
+        background: #0A0B0D;
+        color: #E2E8F0;
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
+      #root {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1.5rem 2rem;
+      }
+      select {
+        background: #13151A;
+        color: #E2E8F0;
+        border: 1px solid #1E2128;
+        border-radius: 2px;
+        padding: 4px 8px;
+        font-size: 11px;
+        font-family: var(--font-sans);
+        outline: none;
+        cursor: pointer;
+      }
+      select:focus { border-color: #3B82F6; }
+      option { background: #13151A; }
+      * { scrollbar-width: thin; scrollbar-color: #1E2128 transparent; }
+      ::-webkit-scrollbar { width: 4px; height: 4px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #1E2128; border-radius: 0; }
     </style>
   </head>
   <body>
